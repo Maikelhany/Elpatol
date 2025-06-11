@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المحل</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 95%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .section {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            color: #4CAF50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        .toggle-btn {
+            background-color: #2196F3;
+        }
+        .edit-btn {
+            background-color: #ff9800;
+        }
+        .remove-btn {
+            background-color: #f44336;
+        }
+        
+        /* أنماط صفحة التسجيل */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .login-container h2 {
+            color: #4CAF50;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- صفحة تسجيل الدخول -->
+    <div id="loginPage" class="login-container">
+        <h2>تسجيل الدخول</h2>
+        <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور">
+        <button onclick="checkPassword()">دخول</button>
+        <p id="loginError" style="color: red;"></p>
+    </div>
+
+    <!-- المحتوى الرئيسي (يظهر بعد التسجيل) -->
+    <div id="mainContent" class="hidden">
+        <div class="container">
+            <div class="header">
+                <h1>نظام إدارة المحل</h1>
+                <button onclick="logout()" style="float: left;">تسجيل خروج</button>
+            </div>
+
+            <div class="notification" id="lowStockNotification">
+                <span onclick="closeNotification()" style="float: left; margin-left: 10px; cursor: pointer;">✕</span>
+                <h3>تنبيه: المنتجات التالية أوشكت على النفاد!</h3>
+                <div id="lowStockItemsList"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">البحث عن المنتجات للبيع</h2>
+                <input type="text" id="searchProduct" placeholder="ابحث عن منتج...">
+                <button onclick="searchProducts()">بحث</button>
+                <div id="searchResults"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">عملية بيع جديدة</h2>
+                <div id="saleItems"></div>
+                <button onclick="addSaleItem()">إضافة منتج</button>
+                <button onclick="completeSale()">إتمام البيع</button>
+                <div id="saleTotal" style="font-weight: bold; margin-top: 10px;"></div>
+            </div>
+
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="section-title">المخزون الحالي</h2>
+                    <button class="toggle-btn" onclick="toggleInventory()">إظهار/إخفاء المخزون</button>
+                </div>
+                <div id="inventorySection">
+                    <input type="text" id="searchInventory" placeholder="ابحث في المخزون..." oninput="filterInventory()">
+                    <table id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>كود المنتج</th>
+                                <th>اسم المنتج</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                                <th>تعديل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryBody">
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
+                        </tbody>
+                    </table>
+                    <button onclick="showAddProductForm()">إضافة منتج جديد</button>
+                    
+                    <!-- نموذج إضافة منتج جديد -->
+                    <div id="addProductForm" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+                        <h3>إضافة منتج جديد</h3>
+                        <div>
+                            <label for="newProductName">اسم المنتج:</label>
+                            <input type="text" id="newProductName" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label for="newProductPrice">السعر:</label>
+                            <input type="number" id="newProductPrice" step="0.01" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label for="newProductQuantity">الكمية:</label>
+                            <input type="number" id="newProductQuantity" style="width: 100%;">
+                        </div>
+                        <button onclick="addNewProduct()">حفظ</button>
+                        <button class="remove-btn" onclick="hideAddProductForm()">إلغاء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تخزين البيانات في localStorage
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        let sales = JSON.parse(localStorage.getItem('sales')) || [];
+        let currentSaleItems = [];
+        let notificationClosed = false;
+
+        // كلمة المرور (يمكنك تغييرها)
+        const SITE_PASSWORD = "123456";
+        
+        // التحقق من كلمة المرور
+        function checkPassword() {
+            const enteredPassword = document.getElementById('passwordInput').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (enteredPassword === SITE_PASSWORD) {
+                // تسجيل الدخول ناجح
+                localStorage.setItem('isLoggedIn', 'true');
+                showMainContent();
+            } else {
+                // كلمة مرور خاطئة
+                errorElement.textContent = "كلمة المرور غير صحيحة";
+            }
+        }
+        
+        // تسجيل الخروج
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
+        
+        // عرض المحتوى الرئيسي
+        function showMainContent() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            
+            // تحميل البيانات وعرضها
+            renderInventory();
+            checkLowStock();
+            updateSaleTotal();
+        }
+        
+        // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
+        window.onload = function() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (isLoggedIn) {
+                showMainContent();
+            } else {
+                document.getElementById('loginPage').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
+            }
+        };
+        
+        // ===== باقي دوال الموقع =====
+        
+        // عرض المخزون
+        function renderInventory() {
+            const tbody = document.getElementById('inventoryBody');
+            tbody.innerHTML = '';
+            
+            inventory.forEach((product, index) => {
+                const row = document.createElement('tr');
+                if (product.quantity <= 5) {
+                    row.style.backgroundColor = '#fff3f3';
+                }
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.price.toFixed(2)}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editProductForm(${index})">تعديل</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // تصفية المخزون
+        function filterInventory() {
+            const searchTerm = document.getElementById('searchInventory').value.toLowerCase();
+            const rows = document.getElementById('inventoryBody').getElementsByTagName('tr');
+            
+            for (let row of rows) {
+                const name = row.getElementsByTagName('td')[1].textContent.toLowerCase();
+                const id = row.getElementsByTagName('td')[0].textContent.toLowerCase();
+                if (name.includes(searchTerm) || id.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        // البحث عن منتجات للبيع
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchProduct').value.toLowerCase();
+            const results = inventory.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) || 
+                product.id.toString().includes(searchTerm)
+            );
+            
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p>لا توجد نتائج</p>';
+                return;
+            }
+            
+            results.forEach(product => {
+                const div = document.createElement('div');
+                div.style.padding = '10px';
+                div.style.borderBottom = '1px solid #eee';
+                div.innerHTML = `
+                    <strong>${product.name}</strong> - الكمية: ${product.quantity} - السعر: ${product.price.toFixed(2)}
+                    <button onclick="addToSale('${product.id}')">إضافة للبيع</button>
+                `;
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        // إضافة منتج للبيع
+        function addToSale(productId) {
+            const product = inventory.find(p => p.id == productId);
+            if (!product) return;
+            
+            if (currentSaleItems.some(item => item.productId == productId)) {
+                alert('هذا المنتج مضاف مسبقاً لعملية البيع');
+                return;
+            }
+            
+            currentSaleItems.push({
+                productId: product.id,
+                productName: product.name,
+                quantity: 1,
+                price: product.price
+            });
+            
+            renderSaleItems();
+            updateSaleTotal();
+        }
+
+        // عرض عناصر البيع
+        function renderSaleItems() {
+            const saleItemsDiv = document.getElementById('saleItems');
+            saleItemsDiv.innerHTML = '';
+            
+            currentSaleItems.forEach((item, index) => {
+                const product = inventory.find(p => p.id == item.productId);
+                const maxQty = product ? product.quantity : 0;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.style.margin = '10px 0';
+                itemDiv.style.padding = '10px';
+                itemDiv.style.backgroundColor = '#f9f9f9';
+                itemDiv.style.borderRadius = '4px';
+                itemDiv.style.display = 'flex';
+                itemDiv.style.alignItems = 'center';
+                itemDiv.style.gap = '10px';
+                itemDiv.innerHTML = `
+                    <strong>${item.productName}</strong>
+                    <input type="number" id="saleQty_${item.productId}" value="${item.quantity}" min="1" max="${maxQty}" style="width: 60px;" onchange="updateSaleItemQty(${index}, this.value)">
+                    السعر: ${item.price.toFixed(2)} 
+                    الإجمالي: ${(item.quantity * item.price).toFixed(2)}
+                    <button class="remove-btn" onclick="removeSaleItem(${index})">إزالة</button>
+                `;
+                saleItemsDiv.appendChild(itemDiv);
+            });
+        }
+
+        // تحديث كمية عنصر البيع
+        function updateSaleItemQty(index, newQty) {
+            const product = inventory.find(p => p.id == currentSaleItems[index].productId);
+            newQty = parseInt(newQty);
+            
+            if (newQty < 1) newQty = 1;
+            if (product && newQty > product.quantity) {
+                newQty = product.quantity;
+                document.getElementById(`saleQty_${currentSaleItems[index].productId}`).value = newQty;
+            }
+            
+            currentSaleItems[index].quantity = newQty;
+            updateSaleTotal();
+        }
+
+        // إزالة عنصر من عملية البيع
+        function removeSaleItem(index) {
+            currentSaleItems.splice(index, 1);
+            renderSaleItems();
+            updateSaleTotal();
+        }
+
+        // تحديث المجموع الكلي للبيع
+        function updateSaleTotal() {
+            const total = currentSaleItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            document.getElementById('saleTotal').textContent = `المجموع الكلي: ${total.toFixed(2)}`;
+        }
+
+        // إتمام عملية البيع
+        function completeSale() {
+            if (currentSaleItems.length === 0) {
+                alert('لم يتم إضافة أي منتجات للبيع');
+                return;
+            }
+            
+            const sale = {
+                date: new Date().toLocaleString(),
+                items: [...currentSaleItems],
+                total: currentSaleItems.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+            };
+            
+            currentSaleItems.forEach(item => {
+                const productIndex = inventory.findIndex(p => p.id == item.productId);
+                if (productIndex !== -1) {
+                    inventory[productIndex].quantity -= item.quantity;
+                }
+            });
+            
+            sales.push(sale);
+            localStorage.setItem('sales', JSON.stringify(sales));
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            
+            currentSaleItems = [];
+            renderSaleItems();
+            renderInventory();
+            updateSaleTotal();
+            checkLowStock();
+            
+            alert(`تم إتمام البيع بنجاح! المجموع: ${sale.total.toFixed(2)}`);
+        }
+
+        // عرض نموذج تعديل المنتج
+        function editProductForm(index) {
+            const product = inventory[index];
+            
+            const newName = prompt(`اسم المنتج الحالي: ${product.name}\nأدخل الاسم الجديد:`, product.name);
+            if (newName === null) return;
+            
+            const newPrice = prompt(`السعر الحالي: ${product.price}\nأدخل السعر الجديد:`, product.price);
+            if (newPrice === null) return;
+            
+            const newQty = prompt(`الكمية الحالية: ${product.quantity}\nأدخل الكمية الجديدة:`, product.quantity);
+            if (newQty === null) return;
+            
+            if (newName && newName.trim() !== '') {
+                product.name = newName.trim();
+            }
+            
+            if (!isNaN(newPrice) && parseFloat(newPrice) >= 0) {
+                product.price = parseFloat(newPrice);
+            }
+            
+            if (!isNaN(newQty) && parseInt(newQty) >= 0) {
+                product.quantity = parseInt(newQty);
+            }
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            renderInventory();
+            checkLowStock();
+        }
+
+        // عرض نموذج إضافة منتج
+        function showAddProductForm() {
+            document.getElementById('addProductForm').style.display = 'block';
+        }
+
+        // إخفاء نموذج إضافة منتج
+        function hideAddProductForm() {
+            document.getElementById('addProductForm').style.display = 'none';
+            document.getElementById('newProductName').value = '';
+            document.getElementById('newProductPrice').value = '';
+            document.getElementById('newProductQuantity').value = '';
+        }
+
+        // إضافة منتج جديد
+        function addNewProduct() {
+            const name = document.getElementById('newProductName').value.trim();
+            const price = parseFloat(document.getElementById('newProductPrice').value);
+            const quantity = parseInt(document.getElementById('newProductQuantity').value);
+            
+            if (!name || isNaN(price) || isNaN(quantity)) {
+                alert('الرجاء إدخال بيانات صحيحة');
+                return;
+            }
+            
+            const newId = inventory.length > 0 ? Math.max(...inventory.map(p => p.id)) + 1 : 1;
+            
+            inventory.push({
+                id: newId,
+                name: name,
+                price: price,
+                quantity: quantity
+            });
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            renderInventory();
+            checkLowStock();
+            hideAddProductForm();
+        }
+
+        // التحقق من المنتجات التي أوشكت على النفاد
+        function checkLowStock() {
+            const lowStockItems = inventory.filter(p => p.quantity <= 5);
+            
+            if (lowStockItems.length > 0 && !notificationClosed) {
+                const notification = document.getElementById('lowStockNotification');
+                const itemsList = document.getElementById('lowStockItemsList');
+                itemsList.innerHTML = '';
+                
+                lowStockItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'low-stock-item';
+                    itemDiv.innerHTML = `
+                        ${item.name} - الكمية المتبقية: ${item.quantity}
+                    `;
+                    itemsList.appendChild(itemDiv);
+                });
+                
+                notification.style.display = 'block';
+            } else if (lowStockItems.length === 0) {
+                document.getElementById('lowStockNotification').style.display = 'none';
+            }
+        }
+
+        // إغلاق الإشعار
+        function closeNotification() {
+            document.getElementById('lowStockNotification').style.display = 'none';
+            notificationClosed = true;
+            
+            setTimeout(() => {
+                notificationClosed = false;
+                checkLowStock();
+            }, 3600000);
+        }
+
+        // إظهار/إخفاء قسم المخزون
+        function toggleInventory() {
+            const section = document.getElementById('inventorySection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // إضافة عنصر بيع
+        function addSaleItem() {
+            const productId = prompt('أدخل كود المنتج:');
+            if (!productId) return;
+            
+            const product = inventory.find(p => p.id == productId);
+            if (!product) {
+                alert('المنتج غير موجود');
+                return;
+            }
+            
+            addToSale(productId);
+        }
+    </script>
+</body>
+</html>
